@@ -1,109 +1,129 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import React from 'react';
+import { StyleSheet, View, Text, FlatList } from 'react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+// Define the type for an event
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+}
 
-export default function TabTwoScreen() {
+// Sample event data
+const EVENTS: Event[] = [
+  { id: '1', title: 'Event 1', description: 'This is the first event.' },
+  { id: '2', title: 'Event 2', description: 'This is the second event.' },
+  { id: '3', title: 'Event 3', description: 'This is the third event.' },
+  { id: '4', title: 'Event 4', description: 'This is the fourth event.' },
+  { id: '5', title: 'Event 5', description: 'This is the fifth event.' },
+  { id: '6', title: 'Event 6', description: 'This is the sixth event.' },
+];
+
+export default function EventsScreen() {
+  // Set up the video player
+  const player = useVideoPlayer(require('../../assets/images/background.mp4'), (player) => {
+    player.loop = true; // Loop the video
+    player.muted = true; // Disable video audio
+    player.play(); // Autoplay the video
+  });
+
+  const renderItem = ({ item }: { item: Event }) => (
+    <View style={styles.eventBox}>
+      <Text style={styles.eventTitle}>{item.title}</Text>
+      <Text style={styles.eventDescription}>{item.description}</Text>
+    </View>
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
+    <View style={styles.container}>
+      {/* Full-Screen Video Background */}
+      <View style={styles.videoContainer}>
+        <VideoView
+          style={styles.video}
+          player={player}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+      </View>
+      {/* Overlay Content */}
+      <View style={styles.overlay}>
+      <FlatList
+        data={EVENTS}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        key={'one-column'} // Force re-render with a unique key
+        numColumns={1} // Single column layout
+        contentContainerStyle={{
+          ...styles.centerContent,
+          paddingBottom: 100, // Adjust this value to match the height of the navigation bar
+        }}
+        showsVerticalScrollIndicator={false} // Hide the vertical scroll bar
+      />
+
+
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  videoContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+  },
+  video: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: '390%',
+    height: '100%',
+    transform: [
+      { translateX: '-50%' },
+      { translateY: '-50%' },
+    ],
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingTop: 55, // Adjust if needed
+  },
+  
+  centerContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  eventBox: {
+    width: 300, // Preset width for the box
+    height: 220, // Preset height for the box
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 15,
+    elevation: 5, // Shadow for Android
+    shadowColor: '#000', // Shadow for iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    justifyContent: 'center', // Center text vertically
+    alignItems: 'center', // Center text horizontally
+  },  
+  eventTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  eventDescription: {
+    fontSize: 16,
+    color: '#555',
   },
 });

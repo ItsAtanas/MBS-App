@@ -1,74 +1,130 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Animated, Text } from 'react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { Accelerometer } from 'expo-sensors';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function App() {
+  const [positionX] = useState(new Animated.Value(0)); // For horizontal movement
+  const [positionY] = useState(new Animated.Value(0)); // For vertical movement
 
-export default function HomeScreen() {
+  const player = useVideoPlayer(require('../../assets/images/background.mp4'), (player) => {
+    player.loop = true; 
+    player.muted = true; 
+    player.play(); 
+  });
+
+  useEffect(() => {
+    // Subscribe to accelerometer updates
+    const subscription = Accelerometer.addListener((data) => {
+      const newValueX = data.x * 60; // Adjust multiplier for horizontal sensitivity
+      const newValueY = -data.y * 60; // Adjust multiplier for vertical sensitivity (invert y for natural tilt)
+
+      // Animate horizontal movement
+      Animated.timing(positionX, {
+        toValue: newValueX,
+        duration: 100,
+        useNativeDriver: true,
+      }).start();
+
+      // Animate vertical movement
+      Animated.timing(positionY, {
+        toValue: newValueY,
+        duration: 100,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    // Clean up subscription on unmount
+    return () => subscription.remove();
+  }, [positionX, positionY]);
+
+  useEffect(() => {
+    Accelerometer.setUpdateInterval(100); 
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <View style={styles.container}>
+      {/* Title at the top 
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>Managed Business Solutions</Text>
+      </View>
+      */}
+
+      {/* Full-Screen Video Background */}
+      <View style={styles.videoContainer}>
+        <VideoView style={styles.video} player={player} />
+      </View>
+
+      {/* Centered Image with Movement */}
+      <View style={styles.overlay}>
+        <Animated.Image
+          source={require('../../assets/images/logo2.png')}
+          style={[
+            styles.logo,
+            {
+              transform: [
+                { translateX: positionX }, // Apply horizontal translation
+                { translateY: positionY }, // Apply vertical translation
+              ],
+            },
+          ]}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
     position: 'absolute',
+    top: 50, // Adjust vertical position
+    width: '100%',
+    alignItems: 'center',
+    zIndex: 1, // Ensure it appears above other components
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: 'white',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+    textAlign: 'center',
+    paddingTop: 50,
+  },
+  videoContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
+  },
+  video: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: '390%',
+    height: '100%',
+    transform: [
+      { translateX: '-50%' },
+      { translateY: '-50%' },
+    ],
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'center', // Centers vertically
+    alignItems: 'center',    // Centers horizontally
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+    paddingBottom: '30%',
   },
 });
